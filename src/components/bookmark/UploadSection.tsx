@@ -97,19 +97,32 @@ export const UploadSection: React.FC<UploadSectionProps> = ({ onBookmarksLoaded,
           </div>
         </div>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 space-y-4">
           <h3 className="text-sm font-medium text-foreground">支持的格式：</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm font-medium text-foreground mb-1">HTML 格式</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+              <p className="text-sm font-medium text-foreground">HTML 格式</p>
               <p className="text-xs text-muted-foreground">
                 浏览器导出的标准书签文件（.html）
               </p>
             </div>
-            <div className="p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm font-medium text-foreground mb-1">Markdown 格式</p>
-              <p className="text-xs text-muted-foreground">
-                表格格式：| 名称 | 链接 | 介绍 |
+            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+              <p className="text-sm font-medium text-foreground">Markdown 格式</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                支持表格格式的书签文件（.md）
+              </p>
+              <div className="bg-card p-3 rounded border border-border">
+                <pre className="text-xs text-foreground font-mono overflow-x-auto">
+{`# 分类名称
+
+| 名称 | 链接 | 介绍 |
+| ---- | ---- | ---- |
+| 网站名称 | https://example.com | 网站介绍信息 |
+| 另一个网站 | https://another.com | 该网站的描述 |`}
+                </pre>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                注：表格需包含名称、链接两列，介绍列可选
               </p>
             </div>
           </div>

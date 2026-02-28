@@ -218,10 +218,39 @@ export default function BookmarkChecker() {
 
         {/* 页脚 */}
         <footer className="border-t border-border bg-card mt-12">
-          <div className="container mx-auto px-4 py-6">
-            <p className="text-center text-sm text-muted-foreground">
-              © 2026 书签有效性监测网站. 支持 HTML 和 Markdown 格式的书签文件
-            </p>
+          <div className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3">使用说明</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• 上传浏览器导出的HTML书签文件或Markdown格式的书签文件</li>
+                  <li>• 点击"开始检测"按钮，系统将自动检测所有书签链接的有效性</li>
+                  <li>• 查看检测结果，可以按状态筛选和搜索书签</li>
+                  <li>• 点击"导出无效书签"按钮，下载无效链接的CSV文件</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Markdown 格式示例</h3>
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <pre className="text-xs text-foreground font-mono overflow-x-auto">
+{`# 分类名称
+
+| 名称 | 链接 | 介绍 |
+| ---- | ---- | ---- |
+| 网站名称 | https://example.com | 网站介绍信息 |
+| 另一个网站 | https://another.com | 该网站的描述 |`}
+                  </pre>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  注：Markdown 表格需包含名称、链接两列，介绍列可选
+                </p>
+              </div>
+            </div>
+            <div className="border-t border-border pt-6">
+              <p className="text-center text-sm text-muted-foreground">
+                © 2026 书签有效性监测网站. 支持 HTML 和 Markdown 格式的书签文件
+              </p>
+            </div>
           </div>
         </footer>
       </div>
