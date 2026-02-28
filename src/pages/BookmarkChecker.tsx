@@ -219,7 +219,7 @@ export default function BookmarkChecker() {
         {/* 页脚 */}
         <footer className="border-t border-border bg-card mt-12">
           <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-3">使用说明</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
@@ -228,6 +228,23 @@ export default function BookmarkChecker() {
                   <li>• 查看检测结果，可以按状态筛选和搜索书签</li>
                   <li>• 点击"导出无效书签"按钮，下载无效链接的CSV文件</li>
                 </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3">如何导出书签</h3>
+                <div className="space-y-3">
+                  <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                    <p className="text-sm font-medium text-foreground mb-1">Chrome 浏览器</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      在地址栏输入以下地址：
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded text-primary font-mono block">
+                      chrome://bookmarks/
+                    </code>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      然后点击右上角菜单，选择"导出书签"
+                    </p>
+                  </div>
+                </div>
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-3">Markdown 格式示例</h3>
