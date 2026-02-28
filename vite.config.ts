@@ -6,6 +6,7 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/Bookmark-validity-monitoring/',   // 👈 添加这一行
   plugins: [
     react(),
     miaodaDevPlugin(),
