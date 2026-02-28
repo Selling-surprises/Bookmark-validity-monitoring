@@ -98,6 +98,28 @@ export const UploadSection: React.FC<UploadSectionProps> = ({ onBookmarksLoaded,
         </div>
 
         <div className="mt-6 space-y-4">
+          {/* Chrome 导出提示 */}
+          <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+            <h3 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <span className="text-primary">💡</span>
+              Chrome 浏览器导出书签方法
+            </h3>
+            <p className="text-sm text-foreground">
+              Chrome内核浏览器打开{' '}
+              <a
+                href="chrome://bookmarks/"
+                className="text-primary hover:underline font-mono"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open('chrome://bookmarks/', '_blank');
+                }}
+              >
+                chrome://bookmarks/
+              </a>
+              {' '}可以导出书签，点击链接可以从新标签页打开
+            </p>
+          </div>
+
           <h3 className="text-sm font-medium text-foreground">支持的格式：</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-muted/50 rounded-lg space-y-2">
