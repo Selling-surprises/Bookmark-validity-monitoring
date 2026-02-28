@@ -106,17 +106,10 @@ export const UploadSection: React.FC<UploadSectionProps> = ({ onBookmarksLoaded,
             </h3>
             <p className="text-sm text-foreground">
               Chrome内核浏览器打开{' '}
-              <a
-                href="chrome://bookmarks/"
-                className="text-primary hover:underline font-mono"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open('chrome://bookmarks/', '_blank');
-                }}
-              >
+              <code className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded">
                 chrome://bookmarks/
-              </a>
-              {' '}可以导出书签，点击链接可以从新标签页打开
+              </code>
+              {' '}可以导出书签
             </p>
           </div>
 
