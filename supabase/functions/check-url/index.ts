@@ -51,7 +51,7 @@ serve(async (req) => {
         JSON.stringify({
           url,
           status: 'invalid',
-          errorMessage: 'Invalid URL format',
+          errorMessage: '无效的URL格式',
           responseTime: 0,
         } as CheckUrlResponse),
         {
@@ -68,16 +68,36 @@ serve(async (req) => {
     const startTime = Date.now();
     let response: CheckUrlResponse;
 
+    // 通用请求头，模拟浏览器
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    };
+
     try {
-      const fetchResponse = await fetch(parsedUrl.toString(), {
+      // 首先尝试HEAD请求
+      let fetchResponse = await fetch(parsedUrl.toString(), {
         method: 'HEAD',
+        headers,
         redirect: 'follow',
-        signal: AbortSignal.timeout(10000), // 10秒超时
+        signal: AbortSignal.timeout(15000), // 15秒超时
       });
+
+      // 如果HEAD请求失败（405 Method Not Allowed等），尝试GET请求
+      if (!fetchResponse.ok && (fetchResponse.status === 405 || fetchResponse.status === 403)) {
+        fetchResponse = await fetch(parsedUrl.toString(), {
+          method: 'GET',
+          headers,
+          redirect: 'follow',
+          signal: AbortSignal.timeout(15000),
+        });
+      }
 
       const responseTime = Date.now() - startTime;
 
-      if (fetchResponse.ok) {
+      // 2xx和3xx状态码都视为有效
+      if (fetchResponse.ok || (fetchResponse.status >= 200 && fetchResponse.status < 400)) {
         response = {
           url,
           status: 'valid',
@@ -95,7 +115,21 @@ serve(async (req) => {
       }
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage = '未知错误';
+      
+      if (error instanceof Error) {
+        if (error.name === 'TimeoutError') {
+          errorMessage = '请求超时';
+        } else if (error.message.includes('DNS')) {
+          errorMessage = 'DNS解析失败';
+        } else if (error.message.includes('connection')) {
+          errorMessage = '连接失败';
+        } else if (error.message.includes('certificate') || error.message.includes('SSL')) {
+          errorMessage = 'SSL证书错误';
+        } else {
+          errorMessage = error.message;
+        }
+      }
 
       response = {
         url,

@@ -1,4 +1,5 @@
 
+    import * as vite from 'vite';
     import { defineConfig, loadConfigFromFile } from "vite";
     import type { Plugin, ConfigEnv } from "vite";
     import tailwindcss from "tailwindcss";
@@ -17,8 +18,19 @@
     const result = await loadConfigFromFile(env, configFile);
     const userConfig = result?.config;
 
+    const viteVersionInfo = {
+      version: vite.version,
+      rollupVersion: (vite as any).rollupVersion ?? null,
+      rolldownVersion: (vite as any).rolldownVersion ?? null,
+      isRolldownVite: 'rolldownVersion' in vite
+    };
+
     export default defineConfig({
       ...userConfig,
+      define: {
+        __VITE_INFO__: JSON.stringify(viteVersionInfo),
+        ...(userConfig?.define || {})
+      },
       // 将 Vite 缓存目录设置为项目本地目录，避免在 /workspace/node_modules/ 下创建
       cacheDir: path.resolve(__dirname, "node_modules/.vite"),
       plugins: [
