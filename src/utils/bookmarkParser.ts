@@ -17,7 +17,8 @@ export function parseHTMLBookmarks(content: string): Bookmark[] {
     const url = link.getAttribute('href');
     const name = link.textContent?.trim() || '';
     
-    if (url && url.startsWith('http')) {
+    // 只计入http和https链接
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
       bookmarks.push({
         id: `bookmark-${Date.now()}-${index}`,
         name: name || url,

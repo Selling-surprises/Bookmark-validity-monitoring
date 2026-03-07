@@ -133,9 +133,15 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({ bookmarks }) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-md truncate text-muted-foreground text-sm" title={bookmark.url}>
+                      <a
+                        href={bookmark.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="max-w-md truncate text-primary hover:underline text-sm block"
+                        title={bookmark.url}
+                      >
                         {bookmark.url}
-                      </div>
+                      </a>
                       {bookmark.errorMessage && (
                         <div className="text-xs text-destructive mt-1">
                           {bookmark.errorMessage}

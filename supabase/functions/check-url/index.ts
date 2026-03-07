@@ -1,4 +1,4 @@
-// Edge Function: 检测URL有效性
+// Edge Function: 检测URL有效性（多种检测方式）
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
@@ -12,6 +12,7 @@ interface CheckUrlResponse {
   statusCode?: number;
   errorMessage?: string;
   responseTime: number;
+  method?: string; // 记录使用的检测方法
 }
 
 serve(async (req) => {
@@ -64,80 +65,196 @@ serve(async (req) => {
       );
     }
 
-    // 检测URL有效性
+    // 只检测http和https协议
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return new Response(
+        JSON.stringify({
+          url,
+          status: 'invalid',
+          errorMessage: '不支持的协议类型',
+          responseTime: 0,
+        } as CheckUrlResponse),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
     const startTime = Date.now();
     let response: CheckUrlResponse;
 
     // 通用请求头，模拟浏览器
-    const headers = {
+    const commonHeaders = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Cache-Control': 'no-cache',
     };
 
+    // 检测方法1: HEAD请求（最快，资源消耗最小）
     try {
-      // 首先尝试HEAD请求
-      let fetchResponse = await fetch(parsedUrl.toString(), {
+      const headResponse = await fetch(parsedUrl.toString(), {
         method: 'HEAD',
-        headers,
+        headers: commonHeaders,
         redirect: 'follow',
-        signal: AbortSignal.timeout(15000), // 15秒超时
+        signal: AbortSignal.timeout(10000),
       });
 
-      // 如果HEAD请求失败（405 Method Not Allowed等），尝试GET请求
-      if (!fetchResponse.ok && (fetchResponse.status === 405 || fetchResponse.status === 403)) {
-        fetchResponse = await fetch(parsedUrl.toString(), {
-          method: 'GET',
-          headers,
-          redirect: 'follow',
-          signal: AbortSignal.timeout(15000),
+      const responseTime = Date.now() - startTime;
+
+      // 2xx和3xx状态码视为有效
+      if (headResponse.status >= 200 && headResponse.status < 400) {
+        return new Response(JSON.stringify({
+          url,
+          status: 'valid',
+          statusCode: headResponse.status,
+          responseTime,
+          method: 'HEAD',
+        } as CheckUrlResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
         });
       }
 
-      const responseTime = Date.now() - startTime;
-
-      // 2xx和3xx状态码都视为有效
-      if (fetchResponse.ok || (fetchResponse.status >= 200 && fetchResponse.status < 400)) {
-        response = {
-          url,
-          status: 'valid',
-          statusCode: fetchResponse.status,
-          responseTime,
-        };
-      } else {
-        response = {
+      // 如果HEAD返回405或403，尝试其他方法
+      if (headResponse.status !== 405 && headResponse.status !== 403) {
+        return new Response(JSON.stringify({
           url,
           status: 'invalid',
-          statusCode: fetchResponse.status,
-          errorMessage: `HTTP ${fetchResponse.status} ${fetchResponse.statusText}`,
+          statusCode: headResponse.status,
+          errorMessage: `HTTP ${headResponse.status}`,
           responseTime,
-        };
+          method: 'HEAD',
+        } as CheckUrlResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
       }
-    } catch (error) {
+    } catch (headError) {
+      // HEAD请求失败，继续尝试其他方法
+      console.log('HEAD request failed, trying GET:', headError);
+    }
+
+    // 检测方法2: GET请求（更通用，但消耗更多资源）
+    try {
+      const getResponse = await fetch(parsedUrl.toString(), {
+        method: 'GET',
+        headers: commonHeaders,
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15000),
+      });
+
       const responseTime = Date.now() - startTime;
-      let errorMessage = '未知错误';
-      
-      if (error instanceof Error) {
-        if (error.name === 'TimeoutError') {
+
+      if (getResponse.status >= 200 && getResponse.status < 400) {
+        return new Response(JSON.stringify({
+          url,
+          status: 'valid',
+          statusCode: getResponse.status,
+          responseTime,
+          method: 'GET',
+        } as CheckUrlResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } else {
+        return new Response(JSON.stringify({
+          url,
+          status: 'invalid',
+          statusCode: getResponse.status,
+          errorMessage: `HTTP ${getResponse.status}`,
+          responseTime,
+          method: 'GET',
+        } as CheckUrlResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    } catch (getError) {
+      // GET请求也失败，尝试最后的方法
+      console.log('GET request failed, trying OPTIONS:', getError);
+    }
+
+    // 检测方法3: OPTIONS请求（某些服务器支持）
+    try {
+      const optionsResponse = await fetch(parsedUrl.toString(), {
+        method: 'OPTIONS',
+        headers: commonHeaders,
+        redirect: 'follow',
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const responseTime = Date.now() - startTime;
+
+      if (optionsResponse.status >= 200 && optionsResponse.status < 400) {
+        return new Response(JSON.stringify({
+          url,
+          status: 'valid',
+          statusCode: optionsResponse.status,
+          responseTime,
+          method: 'OPTIONS',
+        } as CheckUrlResponse), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    } catch (optionsError) {
+      console.log('OPTIONS request failed:', optionsError);
+    }
+
+    // 所有方法都失败，返回错误
+    const responseTime = Date.now() - startTime;
+    let errorMessage = '连接失败';
+
+    // 尝试最后一次简单的fetch来获取具体错误
+    try {
+      await fetch(parsedUrl.toString(), {
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch (finalError) {
+      if (finalError instanceof Error) {
+        if (finalError.name === 'TimeoutError' || finalError.message.includes('timeout')) {
           errorMessage = '请求超时';
-        } else if (error.message.includes('DNS')) {
+        } else if (finalError.message.includes('DNS') || finalError.message.includes('getaddrinfo')) {
           errorMessage = 'DNS解析失败';
-        } else if (error.message.includes('connection')) {
-          errorMessage = '连接失败';
-        } else if (error.message.includes('certificate') || error.message.includes('SSL')) {
+        } else if (finalError.message.includes('connection') || finalError.message.includes('ECONNREFUSED')) {
+          errorMessage = '连接被拒绝';
+        } else if (finalError.message.includes('certificate') || finalError.message.includes('SSL') || finalError.message.includes('TLS')) {
           errorMessage = 'SSL证书错误';
+        } else if (finalError.message.includes('network')) {
+          errorMessage = '网络错误';
         } else {
-          errorMessage = error.message;
+          errorMessage = finalError.message.substring(0, 100); // 限制错误信息长度
         }
       }
-
-      response = {
-        url,
-        status: 'invalid',
-        errorMessage,
-        responseTime,
-      };
     }
+
+    response = {
+      url,
+      status: 'invalid',
+      errorMessage,
+      responseTime,
+      method: 'ALL_FAILED',
+    };
 
     return new Response(JSON.stringify(response), {
       status: 200,
